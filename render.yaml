@@ -24,3 +24,10 @@ services:
         sync: false # set manually — a publicly reachable Postgres (Render Postgres
         # or another managed instance). Your local Postgres on localhost is NOT
         # reachable from Render and cannot be used here.
+      - key: LINKEDIN_CLIENT_ID
+        sync: false # set manually — LinkedIn OAuth app client ID
+      - key: LINKEDIN_CLIENT_SECRET
+        sync: false # set manually — LinkedIn OAuth app client secret
+      - key: LINKEDIN_REDIRECT_URI
+        sync: false # set manually — must match the redirect URI configured
+        # in the LinkedIn OAuth app, e.g. https://<service>.onrender.com/recruitment/check-linkedin
