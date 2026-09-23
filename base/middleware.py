@@ -209,7 +209,13 @@ class ForcePasswordChangeMiddleware:
             return self.get_response(request)
 
         if hasattr(request, "user") and request.user.is_authenticated:
-            if getattr(request.user, "is_new_employee", True):
+            # Only superusers can self-service change their password (see
+            # base.views.change_password); regular employees' passwords are
+            # set by an admin, so never force-redirect them here or they'd
+            # bounce forever between "/" and "/change-password".
+            if request.user.is_superuser and getattr(
+                request.user, "is_new_employee", True
+            ):
                 return redirect("change-password")
 
         return self.get_response(request)
