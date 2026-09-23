@@ -1,0 +1,16 @@
+{
+    "name": "The Website Makers",
+    "short_name": "The Website Makers",
+    "description": "HR Software by The Website Makers",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "orangered",
+    "theme_color": "orangered",
+    "icons": [
+      {
+        "src": "/static/favicons/apple-touch-icon.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      }
+    ]
+  }

@@ -1,0 +1,75 @@
+[
+  {
+    "module": "Dashboard",
+    "page": "Home Dashboard",
+    "url": "/",
+    "status": 200,
+    "problems": [
+      "Uncaught JS pageerror(s): c is not defined | Cannot read properties of null (reading 'parentElement') | Cannot read properties of undefined (reading 'length') | Cannot read properties of undefined (reading 'length') | Cannot read properties of undefined (reading 'length') | Cannot read properties of undefined (reading 'length')"
+    ],
+    "screenshot": "C:\\Users\\Cybrisktech\\Desktop\\hrms\\horilla-opensource-horilla-a66f8b7\\e2e\\screenshots\\dashboard__home_dashboard.png"
+  },
+  {
+    "module": "Recruitment",
+    "page": "Dashboard",
+    "url": "/recruitment/dashboard",
+    "status": 200,
+    "problems": [
+      "Uncaught JS pageerror(s): Cannot read properties of null (reading 'addEventListener') | Cannot read properties of null (reading 'getContext')",
+      "Console error(s): Failed to create chart: can't acquire context from the given item"
+    ],
+    "screenshot": "C:\\Users\\Cybrisktech\\Desktop\\hrms\\horilla-opensource-horilla-a66f8b7\\e2e\\screenshots\\recruitment__dashboard.png"
+  },
+  {
+    "module": "Attendance",
+    "page": "Dashboard",
+    "url": "/attendance/dashboard",
+    "status": 200,
+    "problems": [
+      "Uncaught JS pageerror(s): Cannot read properties of null (reading 'parentElement')"
+    ],
+    "screenshot": "C:\\Users\\Cybrisktech\\Desktop\\hrms\\horilla-opensource-horilla-a66f8b7\\e2e\\screenshots\\attendance__dashboard.png"
+  },
+  {
+    "module": "Payroll",
+    "page": "Contract",
+    "url": "/payroll/view-contract/",
+    "status": 200,
+    "problems": [
+      "Uncaught JS pageerror(s): addingContractIds is not defined"
+    ],
+    "screenshot": "C:\\Users\\Cybrisktech\\Desktop\\hrms\\horilla-opensource-horilla-a66f8b7\\e2e\\screenshots\\payroll__contract.png"
+  },
+  {
+    "module": "Project",
+    "page": "Dashboard",
+    "url": "/project/project-dashboard-view",
+    "status": 200,
+    "problems": [
+      "Uncaught JS pageerror(s): \"undefined\" is not valid JSON"
+    ],
+    "screenshot": "C:\\Users\\Cybrisktech\\Desktop\\hrms\\horilla-opensource-horilla-a66f8b7\\e2e\\screenshots\\project__dashboard.png"
+  },
+  {
+    "module": "Settings / Base",
+    "page": "Date & Time Format",
+    "url": "/settings/date-settings/",
+    "status": 200,
+    "problems": [
+      "Uncaught JS pageerror(s): Identifier 'TimeFormattingUtility' has already been declared | Identifier 'DateFormattingUtility' has already been declared"
+    ],
+    "screenshot": "C:\\Users\\Cybrisktech\\Desktop\\hrms\\horilla-opensource-horilla-a66f8b7\\e2e\\screenshots\\settings_base__date_time_format.png"
+  },
+  {
+    "module": "Notifications",
+    "page": "Notifications page",
+    "url": "/notifications/",
+    "status": 404,
+    "problems": [
+      "HTTP 404 on main page load",
+      "Console error(s): Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Network 4xx/5xx: 404 GET http://localhost:8000/notifications/"
+    ],
+    "screenshot": "C:\\Users\\Cybrisktech\\Desktop\\hrms\\horilla-opensource-horilla-a66f8b7\\e2e\\screenshots\\notifications__notifications_page.png"
+  }
+]

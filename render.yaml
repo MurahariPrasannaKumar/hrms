@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: horilla-hrms
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /login
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://*.onrender.com"
+      - key: TIME_ZONE
+        value: "Asia/Kolkata"
+      - key: WEB_CONCURRENCY
+        value: "1"
+      # Render injects PORT automatically; entrypoint.sh already reads it.
+      - key: DATABASE_URL
+        sync: false # set manually — a publicly reachable Postgres (Render Postgres
+        # or another managed instance). Your local Postgres on localhost is NOT
+        # reachable from Render and cannot be used here.
