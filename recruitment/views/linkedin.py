@@ -2,23 +2,27 @@ import json
 import logging
 import os
 import re
-
-import requests
-from django.contrib import messages
-from django.shortcuts import redirect, render
-from django.urls import reverse
-
-logger = logging.getLogger(__name__)
-import json
+from urllib.parse import urlencode
 
 import requests
 from bs4 import BeautifulSoup
 from django.conf import settings
+from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect, render
+from django.urls import reverse
+from django.utils.crypto import get_random_string
 from django.utils.translation import gettext_lazy as _
 
 from horilla_views.cbv_methods import login_required, permission_required
 from recruitment.models import LinkedInAccount, Recruitment
+
+logger = logging.getLogger(__name__)
+
+LINKEDIN_AUTHORIZATION_URL = "https://www.linkedin.com/oauth/v2/authorization"
+LINKEDIN_ACCESS_TOKEN_URL = "https://www.linkedin.com/oauth/v2/accessToken"
+LINKEDIN_USERINFO_URL = "https://www.linkedin.com/oauth/v2/userinfo"
+LINKEDIN_OAUTH_SCOPE = "openid profile email w_member_social"
 
 
 @login_required
@@ -60,24 +64,110 @@ def delete_linkedin_account(request, pk, return_redirect=True):
 
 
 @login_required
+@permission_required("recruitment.add_linkedinaccount")
+def authorize_linkedin(request):
+    """
+    Starts the LinkedIn OAuth flow: redirects the admin to LinkedIn's
+    consent screen so they can authorize this app instead of manually
+    pasting an access token.
+    """
+    if not (
+        settings.LINKEDIN_CLIENT_ID
+        and settings.LINKEDIN_CLIENT_SECRET
+        and settings.LINKEDIN_REDIRECT_URI
+    ):
+        messages.error(
+            request,
+            _(
+                "LinkedIn integration is not configured. Set LINKEDIN_CLIENT_ID, "
+                "LINKEDIN_CLIENT_SECRET and LINKEDIN_REDIRECT_URI."
+            ),
+        )
+        return redirect(reverse("linkedin-setting-list"))
+
+    state = get_random_string(32)
+    request.session["linkedin_oauth_state"] = state
+
+    params = {
+        "response_type": "code",
+        "client_id": settings.LINKEDIN_CLIENT_ID,
+        "redirect_uri": settings.LINKEDIN_REDIRECT_URI,
+        "state": state,
+        "scope": LINKEDIN_OAUTH_SCOPE,
+    }
+    return redirect(f"{LINKEDIN_AUTHORIZATION_URL}?{urlencode(params)}")
+
+
+@login_required
 def check_linkedin(request):
-    import requests
+    """
+    LinkedIn OAuth callback (redirect_uri). Exchanges the authorization
+    code for an access token, fetches the authorizing user's profile,
+    and creates/updates the LinkedInAccount for this company.
+    """
+    error = request.GET.get("error_description") or request.GET.get("error")
+    if error:
+        messages.error(request, _("LinkedIn authorization failed: %s") % error)
+        return redirect(reverse("linkedin-setting-list"))
 
     code = request.GET.get("code")
+    state = request.GET.get("state")
+    expected_state = request.session.pop("linkedin_oauth_state", None)
     if not code:
-        return JsonResponse({"error": "Missing authorization code"}, status=400)
+        messages.error(request, _("LinkedIn did not return an authorization code."))
+        return redirect(reverse("linkedin-setting-list"))
+    if not expected_state or state != expected_state:
+        messages.error(request, _("LinkedIn authorization state mismatch."))
+        return redirect(reverse("linkedin-setting-list"))
 
-    url = "https://www.linkedin.com/oauth/v2/userinfo"
-    data = {
-        "grant_type": "authorization_code",
-        "code": code,
-        "redirect_uri": settings.LINKEDIN_REDIRECT_URI,
-        "client_id": settings.LINKEDIN_CLIENT_ID,
-        "client_secret": settings.LINKEDIN_CLIENT_SECRET,
-    }
+    token_response = requests.post(
+        LINKEDIN_ACCESS_TOKEN_URL,
+        data={
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": settings.LINKEDIN_REDIRECT_URI,
+            "client_id": settings.LINKEDIN_CLIENT_ID,
+            "client_secret": settings.LINKEDIN_CLIENT_SECRET,
+        },
+    )
+    if token_response.status_code != 200:
+        logger.error("LinkedIn token exchange failed: %s", token_response.text)
+        messages.error(request, _("Couldn’t exchange the LinkedIn authorization code."))
+        return redirect(reverse("linkedin-setting-list"))
 
-    response = requests.post(url, data=data)
-    return JsonResponse(response.json(), status=response.status_code)
+    access_token = token_response.json().get("access_token")
+
+    userinfo_response = requests.get(
+        LINKEDIN_USERINFO_URL,
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    if userinfo_response.status_code != 200:
+        logger.error("LinkedIn userinfo fetch failed: %s", userinfo_response.text)
+        messages.error(request, _("Couldn’t fetch the LinkedIn account profile."))
+        return redirect(reverse("linkedin-setting-list"))
+
+    userinfo = userinfo_response.json()
+    sub_id = userinfo.get("sub")
+    email = userinfo.get("email", "")
+    name = userinfo.get("name") or email or sub_id
+
+    selected_company = request.session.get("selected_company")
+    company_id = (
+        selected_company if selected_company and selected_company != "all" else None
+    )
+
+    account, _created = LinkedInAccount.objects.update_or_create(
+        sub_id=sub_id,
+        defaults={
+            "username": name,
+            "email": email,
+            "api_token": access_token,
+            "company_id_id": company_id,
+        },
+    )
+
+    messages.success(request, _("LinkedIn account connected successfully."))
+    return redirect(reverse("linkedin-setting-list"))
 
 
 @login_required

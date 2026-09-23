@@ -13,6 +13,13 @@
 
 {% include "generic/components.html" %}
 
+<div class="mb-3">
+  <a href="{% url 'linkedin-authorize' %}" class="oh-btn oh-btn--secondary">
+    <ion-icon name="logo-linkedin" class="me-1"></ion-icon>
+    {% trans "Connect with LinkedIn" %}
+  </a>
+</div>
+
 <div
   class="oh-checkpoint-badge mb-2"
   id="selectedInstances"
