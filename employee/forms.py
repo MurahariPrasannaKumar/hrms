@@ -28,6 +28,7 @@ from typing import Any
 
 from django import forms
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 from django.db.models import Q
 from django.forms import DateInput, TextInput
 from django.template.loader import render_to_string
@@ -205,6 +206,26 @@ class EmployeeForm(ModelForm):
     Form for Employee model
     """
 
+    password = forms.CharField(
+        label=trans("Login Password"),
+        required=False,
+        widget=forms.PasswordInput(
+            attrs={"autocomplete": "new-password"}, render_value=False
+        ),
+        help_text=trans(
+            "Set the password this employee will use to log in. "
+            "Leave blank on create to auto-generate one from the phone number, "
+            "or leave blank on edit to keep the existing password."
+        ),
+    )
+    confirm_password = forms.CharField(
+        label=trans("Confirm Password"),
+        required=False,
+        widget=forms.PasswordInput(
+            attrs={"autocomplete": "new-password"}, render_value=False
+        ),
+    )
+
     class Meta:
         """
         Meta class to add the additional info
@@ -268,6 +289,25 @@ class EmployeeForm(ModelForm):
                 error_message = _("An Employee with this Email already exists")
 
             raise forms.ValidationError({"email": error_message})
+
+        password = self.cleaned_data.get("password")
+        confirm_password = self.cleaned_data.get("confirm_password")
+        if password or confirm_password:
+            if password != confirm_password:
+                raise forms.ValidationError(
+                    {"confirm_password": _("Passwords do not match.")}
+                )
+            try:
+                validate_password(password)
+            except forms.ValidationError as error:
+                raise forms.ValidationError({"password": error.messages}) from error
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance._admin_set_password = self.cleaned_data.get("password") or None
+        if commit:
+            instance.save()
+        return instance
 
     def get_next_badge_id(self):
         """

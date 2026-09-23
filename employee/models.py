@@ -557,10 +557,12 @@ class Employee(models.Model):
             super().save(*args, **kwargs)
         employee = self
 
+        admin_set_password = getattr(self, "_admin_set_password", None)
+
         if employee.employee_user_id is None:
             # Create user if no corresponding user exists
             username = self.email
-            password = self.phone
+            password = admin_set_password or self.phone
 
             user = User.objects.create_user(
                 username=username,
@@ -578,6 +580,11 @@ class Employee(models.Model):
             view_ownprofile = Permission.objects.get(codename="view_ownprofile")
             user.user_permissions.add(view_ownprofile)
             user.user_permissions.add(change_ownprofile)
+        elif admin_set_password:
+            # Admin explicitly entered a new password for an existing employee
+            user = employee.employee_user_id
+            user.set_password(admin_set_password)
+            user.save()
 
         if not hasattr(self, "employee_work_info"):
             EmployeeWorkInformation.objects.get_or_create(employee_id=self)

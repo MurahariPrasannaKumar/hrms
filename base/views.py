@@ -753,6 +753,11 @@ def change_password(request):
                       successfully, the page reloads with a success message.
     """
     user = request.user
+    if not user.is_superuser:
+        messages.error(
+            request, _("Contact your administrator to change your password.")
+        )
+        return HttpResponse("<script>window.location.href='/';</script>")
     form = ChangePasswordForm(user=user)
     if request.method == "POST":
         form = ChangePasswordForm(user, request.POST)

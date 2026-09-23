@@ -18,9 +18,11 @@
                 <li class="oh-dropdown__item">
                     <a href="/change-username" class="oh-dropdown__link">{% trans "Change Username" %}</a>
                 </li>
-                <li class="oh-dropdown__item">
-                    <a href="/change-password" class="oh-dropdown__link">{% trans "Change Password" %}</a>
-                </li>
+                {% if request.user.is_superuser %}
+                    <li class="oh-dropdown__item">
+                        <a href="/change-password" class="oh-dropdown__link">{% trans "Change Password" %}</a>
+                    </li>
+                {% endif %}
             {% endif %}
         </ul>
         <hr />
