@@ -2,7 +2,15 @@ FROM python:3.10-slim-bullseye AS builder
 
 ENV PYTHONUNBUFFERED=1
 
-RUN apt-get update && apt-get install -y --no-install-recommends libcairo2-dev gcc && rm -rf /var/lib/apt/lists/*
+# bullseye-security moved to the Debian archive; point apt there and
+# disable Valid-Until checks since archived Release files are frozen.
+RUN sed -i \
+        -e 's|deb.debian.org/debian-security|archive.debian.org/debian-security|g' \
+        -e 's|deb.debian.org/debian|archive.debian.org/debian|g' \
+        /etc/apt/sources.list \
+    && apt-get -o Acquire::Check-Valid-Until=false update \
+    && apt-get install -y --no-install-recommends libcairo2-dev gcc \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app/
 
