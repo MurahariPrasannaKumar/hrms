@@ -2,10 +2,12 @@ FROM python:3.10-slim-bullseye AS builder
 
 ENV PYTHONUNBUFFERED=1
 
-# bullseye-security moved to the Debian archive; point apt there and
-# disable Valid-Until checks since archived Release files are frozen.
+# bullseye moved to the Debian archive. The bullseye-security suite isn't
+# published there under its old path, so drop that line and only point the
+# main/updates repos at the archive; disable Valid-Until checks since
+# archived Release files are frozen.
 RUN sed -i \
-        -e 's|deb.debian.org/debian-security|archive.debian.org/debian-security|g' \
+        -e '\|deb.debian.org/debian-security|d' \
         -e 's|deb.debian.org/debian|archive.debian.org/debian|g' \
         /etc/apt/sources.list \
     && apt-get -o Acquire::Check-Valid-Until=false update \
